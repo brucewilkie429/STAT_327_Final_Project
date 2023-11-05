@@ -1,0 +1,438 @@
+---
+title: 'Final Project #4'
+author: "Bruce Wilkie"
+date: "4/26/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library("tidyverse")
+library("reshape")
+```
+
+# 4
+“Blackjack”, is one of the most popular casino games in the world. The objective of the game is to obtain a hand adding as close to 21 as possible without going over that value, i.e “busting”. It is a casino backed game, which means the player competes against the house rather than against one another directly. The player(s’) and dealer begin by being dealt two cards face up. The game then allows a turn for each player to either obtain another card (“Hit”) to try to add more to their sum or not obtain another card and keep the card total they already have (“Stand”). 
+
+We have two main objectives we want to test. The first is to test whether or not using a different number of decks in the game changes the percentages of getting a value of exactly 21 (we assume the players can not count cards). The second objective is to test the chances a player has of winning, losing, or tying against the dealer. For this we will test the scenario of only 1 player against the dealer and we will test this percentage with different numbers of decks that are in play. We know that the house has an advantage since the player will have to make their play before the dealer, and we want to see just how that advantage changes with different number of decks.
+
+
+```{r}
+#2 Decks used for normal game
+#Ace = 0 King, Queen, Jack = 10 
+Deck2 <- c(0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10)
+```
+
+
+```{r}
+Deck10 <- c(0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7, 7, 7, 7, 8, 8, 8, 8, 9, 9, 9, 9, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10)
+```
+
+
+To begin, our first objective we first want to look at the probabilities of receiving a sum of 12-21 from a hand of 2 cards with 2 decks of cards in play vs the probabilities of receiving a sum of 12-21 from a hand of 2 cards with 10 decks of cards in play. We will then plot these probabilities next to one another to see if there is any visable differences in the probabilities. This code takes into account whether an ace will be worth 1 or 11 depending on the other card that is dealt. Our main focus will be on the value of exactly 21.
+
+```{r}
+#2 Cards
+n <- 10000
+pair_sum<-1 # sum of both the cards in a hand 
+num_decks<- c() # number of decks used i.e. Deck2, Deck3, Deck4, ...., etc.
+
+sim_game<- function(n, pair_sum, num_decks){
+simlist <- numeric(n)
+  for(i in 1:n){
+    hand_1 <- sample(num_decks, 2, replace = F)
+    if((hand_1[1]) == 0 && (hand_1[2] == 0))
+      {
+          hand_1[1] <- 11
+          hand_1[2] <- 1
+        
+      }else if((hand_1[1] == 0) && (hand_1[2] != 0))
+      {
+          hand_1[1] <- 11
+  
+      }else if((hand_1[2] == 0) && (hand_1[1] != 0))
+      {
+          hand_1[2] <- 11
+      }
+
+Total <- ifelse(sum(hand_1) == pair_sum, 1, 0)
+simlist[i] <- Total
+}
+mean(simlist)
+}
+
+```
+
+
+```{r}
+sim_game_df_total_2cards <- data.frame(total_value = c(12,13,14,15,16,17,18,19,20,21), percentages_deck2 = c(sim_game(n, 12, Deck2), sim_game(n, 13, Deck2), sim_game(n, 14, Deck2), sim_game(n, 15, Deck2), sim_game(n, 16, Deck2), sim_game(n, 17, Deck2), sim_game(n, 18, Deck2), sim_game(n, 19, Deck2), sim_game(n, 20, Deck2), sim_game(n, 21, Deck2)), percentages_deck10 = c(sim_game(n, 12, Deck10), sim_game(n, 13, Deck10), sim_game(n, 14, Deck10), sim_game(n, 15, Deck10), sim_game(n, 16, Deck10), sim_game(n, 17, Deck10), sim_game(n, 18, Deck10), sim_game(n, 19, Deck10), sim_game(n, 20, Deck10), sim_game(n, 21, Deck10)))
+#sim_game_df_total_2cards
+```
+
+```{r}
+dat2<- melt(sim_game_df_total_2cards, id.vars = "total_value")
+#dat2
+ggplot(dat2, aes(x=total_value, y=value, fill = variable)) +
+  geom_bar(stat='identity', position = "dodge")
+
+```
+# 2: cards per hand
+Hypothesis test to compare the proportion of achieving exactly 21 from 2 cards dealt, using 2 vs 10 decks in the game.
+
+H0: (proportion of 21 using 2 decks) - (proportion of 21 using 10 decks) = 0
+Ha: (proportion  of 21 using 2 decks) - (proportion of 21 using 10 decks) =/= 0
+
+(These values will be slightly different each time running the code but should be very similar)
+Deck 2 Mean = 0.0473 
+Deck 10 Mean = 0.0497 
+
+```{r}
+##Difference in two proportions
+p_2d <- 0.0473 
+p_10d <- 0.0497
+p_total <- (0.0473+0.0497)/2
+
+test_stat <- (p_2d-p_10d)/sqrt(p_total*(1-p_total)*(1/50000+1/50000))
+test_stat
+
+RR <- qnorm(.05/2, lower.tail = T)
+RR
+```
+Conclusion: Since our test statistic of -1.766469 is outside of the rejection region (greater than -1.959964) we fail to reject the null hypothesis and conclude that the proportion of getting a value of 21 with 2 cards using two decks is equal to the proportion of getting a value of 21 with 2 cards using 10 decks of cards in play.
+
+
+We want to next look at the probabilities of receiving a sum of 12-21 from a hand of 3 cards with 2 decks of cards in play vs the probabilities of receiving a sum of 12-21 from a hand of 3 cards with 10 decks of cards in play. We will then plot these probabilities next to one another to see if there is any visable differences in the probabilities. This code also takes into account whether an ace will be worth 1 or 11 depending on the other cards that are dealt. Our main focus will again be on the value of 21 exactly.
+
+```{r}
+#3 Cards
+n <- 500000
+tri_sum<-1 # sum of 3  cards in a hand 
+num_decks<- c() # number of decks used i.e. Deck2, Deck3, Deck4, ...., etc.
+
+sim_game3<- function(n, tri_sum, num_decks){
+simlist <- numeric(n)
+  for(i in 1:n){
+    hand_1 <- sample(num_decks, 3, replace = F)
+    if((hand_1[1] == 0) && (hand_1[2] == 0) && (hand_1[3] == 0) )
+      { #A A A
+          hand_1[1] <- 11
+          hand_1[2] <- 1
+          hand_1[3] <- 1
+        
+      }else if((hand_1[1] == 0) && (hand_1[2] == 0) && (hand_1[3] != 0) )
+      { #A A N 
+        if(hand_1[3] == 10){
+          hand_1[1] <- 1
+          hand_1[2] <- 1
+        }else if(hand_1[3] < 10){
+          hand_1[1] <- 11
+          hand_1[2] <- 1
+        }
+  
+      }else if((hand_1[1] == 0) && (hand_1[2] != 0) && (hand_1[3] == 0))
+      { #A N A 
+        if(hand_1[2] == 10){
+          hand_1[1] <- 1
+          hand_1[3] <- 1
+        }else if(hand_1[2] < 10){
+          hand_1[1] <- 11
+          hand_1[3] <- 1
+        }
+          
+      }else if((hand_1[1] != 0) && (hand_1[2] == 0) && (hand_1[3] == 0))
+      { #N A A
+        if(hand_1[1] == 10){
+          hand_1[2] <- 1
+          hand_1[3] <- 1
+        }else if(hand_1[1] < 10){
+          hand_1[2] <- 11
+          hand_1[3] <- 1
+        }
+          
+      }else if((hand_1[1] == 0) && (hand_1[2] != 0) && (hand_1[3] != 0))
+      { #A N N
+        if((hand_1[2] + hand_1[3]) <= 10){
+          hand_1[1] <- 11
+        }else if((hand_1[2] + hand_1[3]) > 10){
+          hand_1[1] <- 1
+        }
+          
+      }else if((hand_1[1] != 0) && (hand_1[2] == 0) && (hand_1[3] != 0))
+      { #N A N
+        if((hand_1[1] + hand_1[3]) <= 10){
+          hand_1[2] <- 11
+        }else if((hand_1[1] + hand_1[3]) > 10){
+          hand_1[2] <- 1
+        }
+          
+      }else if((hand_1[1] != 0) && (hand_1[2] != 0) && (hand_1[3] == 0))
+      { #N N A
+        if((hand_1[1] + hand_1[2]) <= 10){
+          hand_1[3] <- 11
+        }else if((hand_1[1] + hand_1[2]) > 10){
+          hand_1[3] <- 1
+        }
+          
+      }
+
+Total <- ifelse(sum(hand_1) == tri_sum, 1, 0)
+simlist[i] <- Total
+}
+mean(simlist)
+#sd(simlist)
+}
+```
+
+```{r}
+total_value <- c(12,13,14,15,16,17,18,19,20,21)
+percentages_deck2 <- c(sim_game3(n, 12, Deck2), sim_game3(n, 13, Deck2), 
+                       sim_game3(n, 14, Deck2), sim_game3(n, 15, Deck2), 
+                       sim_game3(n, 16, Deck2), sim_game3(n, 17, Deck2), 
+                       sim_game3(n, 18, Deck2), sim_game3(n, 19, Deck2), 
+                       sim_game3(n, 20, Deck2), sim_game3(n, 21, Deck2))
+percentages_deck10 <- c(sim_game3(n, 12, Deck10), sim_game3(n, 13, Deck10),
+                        sim_game3(n, 14, Deck10), sim_game3(n, 15, Deck10),
+                        sim_game3(n, 16, Deck10), sim_game3(n, 17, Deck10),
+                        sim_game3(n, 18, Deck10), sim_game3(n, 19, Deck10),
+                        sim_game3(n, 20, Deck10), sim_game3(n, 21, Deck10))
+#percent = c(.01,.02,.03,.04,.05,.06,.07,.08,.09,.1)
+
+sim_game_df_total_3cards <- data.frame(total_value, percentages_deck2, percentages_deck10)
+#sim_game_df_total_3cards
+```
+
+```{r}
+dat3<- melt(sim_game_df_total_3cards,id.vars = "total_value")
+#dat3
+ggplot(dat3, aes(x=total_value, y=value, fill = variable)) +
+  geom_bar(stat='identity', position = "dodge")
+
+```
+
+# 3: cards per hand
+
+Hypothesis test to compare the proportion of achieving exactly 21 from 3 cards dealt, using 2 vs 10 decks in the game.
+
+H0: (proportion of 21 using 2 decks) - (proportion of 21 using 10 decks) = 0
+Ha: (proportion of 21 using 2 decks) - (proportion of 21 using 10 decks) =/= 0
+
+(These values will be slightly different each time running the code but should be very similar)
+Deck 2 proportion = 0.089754 
+Deck 10 proportion = 0.089666 
+
+```{r}
+##Difference in two proportions
+p_2d <- 0.089754  
+p_10d <- 0.089666
+p_total <- (0.089754+0.089666)/2
+
+test_stat <- (p_2d-p_10d)/sqrt(p_total*(1-p_total)*(1/50000+1/50000))
+test_stat
+
+RR <- qnorm(.05/2, lower.tail = F)
+RR
+```
+
+Conclusion: Since our test statistic of 0.04869029 is outside of the rejection region (greater than 1.959964) we fail to reject the null hypothesis and conclude that the proportion of getting a value of 21 with 3 cards using two decks is equal to the proportion of getting a value of 21 with 3 cards using 10 decks of cards in play.
+
+
+Here we will look at the winning/tying/losing percentages of one player playing many games against the dealer using different number of decks. Since the player always has to make their move first, the dealer will always have an advantage because the player could potentially bust (go over the value of 21) and lose the hand before the dealer has to make their move. In the code we assigned each player 3 cards randomly. To account for the advantage, any instance of the players hand exceeding 21 is considered a loss, even if the dealer's hand also exceeds 21. This takes into account the fact that the player has to make their play first. 
+
+```{r}
+##Playing 1 on 1 against the dealer with comparing 3 cards per hand
+n <- 50000
+num_decks<- c() # number of decks used i.e. Deck2, Deck3, Deck4, ...., etc.
+
+sim_game1<- function(n, num_decks){
+simlist1 <- numeric(n)
+simlist2 <- numeric(n)
+output <- numeric(n)
+tie <- numeric(n)
+  for(i in 1:n){
+    hand_delt <- sample(num_decks, 6, replace = F)
+    max <- 3
+    y <- seq_along(hand_delt)
+    chunks <- split(hand_delt, ceiling(y/max))
+    hand_1 <- chunks$`1`
+    hand_2 <- chunks$`2`
+    if((hand_1[1] == 0) && (hand_1[2] == 0) && (hand_1[3] == 0) )
+      { #A A A
+          hand_1[1] <- 11
+          hand_1[2] <- 1
+          hand_1[3] <- 1
+        
+      }else if((hand_1[1] == 0) && (hand_1[2] == 0) && (hand_1[3] != 0) )
+      { #A A N 
+        if(hand_1[3] == 10){
+          hand_1[1] <- 1
+          hand_1[2] <- 1
+        }else if(hand_1[3] < 10){
+          hand_1[1] <- 11
+          hand_1[2] <- 1
+        }
+  
+      }else if((hand_1[1] == 0) && (hand_1[2] != 0) && (hand_1[3] == 0))
+      { #A N A 
+        if(hand_1[2] == 10){
+          hand_1[1] <- 1
+          hand_1[3] <- 1
+        }else if(hand_1[2] < 10){
+          hand_1[1] <- 11
+          hand_1[3] <- 1
+        }
+          
+      }else if((hand_1[1] != 0) && (hand_1[2] == 0) && (hand_1[3] == 0))
+      { #N A A
+        if(hand_1[1] == 10){
+          hand_1[2] <- 1
+          hand_1[3] <- 1
+        }else if(hand_1[1] < 10){
+          hand_1[2] <- 11
+          hand_1[3] <- 1
+        }
+          
+      }else if((hand_1[1] == 0) && (hand_1[2] != 0) && (hand_1[3] != 0))
+      { #A N N
+        if((hand_1[2] + hand_1[3]) <= 10){
+          hand_1[1] <- 11
+        }else if((hand_1[2] + hand_1[3]) > 10){
+          hand_1[1] <- 1
+        }
+          
+      }else if((hand_1[1] != 0) && (hand_1[2] == 0) && (hand_1[3] != 0))
+      { #N A N
+        if((hand_1[1] + hand_1[3]) <= 10){
+          hand_1[2] <- 11
+        }else if((hand_1[1] + hand_1[3]) > 10){
+          hand_1[2] <- 1
+        }
+          
+      }else if((hand_1[1] != 0) && (hand_1[2] != 0) && (hand_1[3] == 0))
+      { #N N A
+        if((hand_1[1] + hand_1[2]) <= 10){
+          hand_1[3] <- 11
+        }else if((hand_1[1] + hand_1[2]) > 10){
+          hand_1[3] <- 1
+        }
+          
+      }
+    if((hand_2[1] == 0) && (hand_2[2] == 0) && (hand_2[3] == 0) )
+      { #A A A
+          hand_1[1] <- 11
+          hand_1[2] <- 1
+          hand_1[3] <- 1
+        
+      }else if((hand_2[1] == 0) && (hand_2[2] == 0) && (hand_2[3] != 0) )
+      { #A A N 
+        if(hand_2[3] == 10){
+          hand_2[1] <- 1
+          hand_2[2] <- 1
+        }else if(hand_2[3] < 10){
+          hand_2[1] <- 11
+          hand_2[2] <- 1
+        }
+  
+      }else if((hand_2[1] == 0) && (hand_2[2] != 0) && (hand_2[3] == 0))
+      { #A N A 
+        if(hand_2[2] == 10){
+          hand_2[1] <- 1
+          hand_2[3] <- 1
+        }else if(hand_2[2] < 10){
+          hand_2[1] <- 11
+          hand_2[3] <- 1
+        }
+          
+      }else if((hand_2[1] != 0) && (hand_2[2] == 0) && (hand_2[3] == 0))
+      { #N A A
+        if(hand_2[1] == 10){
+          hand_2[2] <- 1
+          hand_2[3] <- 1
+        }else if(hand_2[1] < 10){
+          hand_2[2] <- 11
+          hand_2[3] <- 1
+        }
+          
+      }else if((hand_2[1] == 0) && (hand_2[2] != 0) && (hand_2[3] != 0))
+      { #A N N
+        if((hand_2[2] + hand_2[3]) <= 10){
+          hand_2[1] <- 11
+        }else if((hand_2[2] + hand_2[3]) > 10){
+          hand_2[1] <- 1
+        }
+          
+      }else if((hand_2[1] != 0) && (hand_2[2] == 0) && (hand_2[3] != 0))
+      { #N A N
+        if((hand_2[1] + hand_2[3]) <= 10){
+          hand_2[2] <- 11
+        }else if((hand_2[1] + hand_2[3]) > 10){
+          hand_2[2] <- 1
+        }
+          
+      }else if((hand_2[1] != 0) && (hand_2[2] != 0) && (hand_2[3] == 0))
+      { #N N A
+        if((hand_2[1] + hand_2[2]) <= 10){
+          hand_2[3] <- 11
+
+      }else if((hand_2[1] + hand_2[2]) > 10){
+          hand_2[3] <- 1
+        }
+          
+      }
+
+Total1 <- sum(hand_1)
+Total2 <- sum(hand_2)
+simlist1[i] <- Total1
+simlist2[i] <- Total2
+if(Total1 > 21){
+    output[i] <- 0
+    #print("Tie")
+  }else if(Total2 > 21){
+    output[i] <- 1
+    #print("Win")
+  }else if(Total1 > Total2){
+    output[i] <- 1
+    #print("Loss")
+  }else if(Total1 < (Total2)){
+    output[i] <- 0
+    #print("Loss")
+  }else if((Total1) == (Total2)){
+    tie[i] <- 1
+    #print("Tie")
+  }
+
+  }
+c(mean(output), mean(tie), 1-mean(output)-mean(tie))
+#sd(output)
+}
+```
+
+
+Here we compare the winning/tying/losing percentages of a game played out 50000 times with 2 decks of cards in play vs 10 decks of cards in play, to see whether or not there is significant disadvantage for the player when the game has more decks of cards in play. 
+
+```{r}
+sim_game1(n, Deck2)
+sim_game1(n, Deck10)
+```
+
+To test whether or not the number of decks used in a game has a negative effect on the player we will again compare the winning percentage of the player with 2 decks of cards vs the winning percentage of the player with 10 decks of cards.
+
+H0: (proportion of player winning using 2 decks) - (proportion of player winning using 10 decks) = 0
+Ha: (proportion of player winning using 2 decks) - (proportion of player winning using 10 decks) > 0
+
+```{r}
+##difference of proportions
+p_2d <- 0.41258
+p_10d <- 0.40870
+p_total <- (0.41258+0.40870)/2
+
+test_stat <- (p_2d-p_10d)/sqrt(p_total*(1-p_total)*(1/50000+1/50000))
+test_stat
+
+RR <- qnorm(.05/2, lower.tail = F)
+RR
+```
+
+Conclusion: Since our test statistic of 1.247041 is outside of the rejection region (less than 1.959964) we fail to reject the null hypothesis and conclude that the players chances of winning against the dealer are roughly the same with 2 decks of cards in play or 10 decks of cards in play. 
+
+Based on our simulations we did not find any significant changes in winning percentages for the player when we change the number of decks in play. In our simulation we did not take card counting into consideration, which is a main reason for employing more decks of cards into play. 
+
